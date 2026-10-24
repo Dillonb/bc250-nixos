@@ -7,6 +7,13 @@
 
 let
   cfg = config.services.bc250-smu-patch;
+
+  # nixpkgs 26.11 removed this option (systemd initrd is always used) and reading it throws.
+  systemdInitrd =
+    let
+      r = builtins.tryEval config.boot.initrd.systemd.enable;
+    in
+    !r.success || r.value;
   py = pkgs.python3Packages.python;
 
   # The initrd only gets what we list, so list every path the package and
@@ -31,7 +38,7 @@ in
   config = lib.mkIf cfg.enable {
     assertions = [
       {
-        assertion = config.boot.initrd.systemd.enable;
+        assertion = systemdInitrd;
         message = "services.bc250-smu-patch requires boot.initrd.systemd.enable";
       }
     ];

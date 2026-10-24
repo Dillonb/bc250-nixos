@@ -7,6 +7,13 @@
 
 let
   cfg = config.services.bc250-acpi-fix;
+
+  # nixpkgs 26.11 removed this option (systemd initrd is always used) and reading it throws.
+  systemdInitrd =
+    let
+      r = builtins.tryEval config.boot.initrd.systemd.enable;
+    in
+    !r.success || r.value;
 in
 {
   options.services.bc250-acpi-fix = {
@@ -22,7 +29,7 @@ in
   config = lib.mkIf cfg.enable {
     assertions = [
       {
-        assertion = config.boot.initrd.systemd.enable -> config.boot.loader.supportsInitrdSecrets or true;
+        assertion = systemdInitrd -> config.boot.loader.supportsInitrdSecrets or true;
         message = "services.bc250-acpi-fix requires an initrd the bootloader loads unmodified.";
       }
     ];
